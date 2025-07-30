@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: flowrdb
+    environment:
+      POSTGRES_DB: flowr
+      POSTGRES_USER: flowruser
+      POSTGRES_PASSWORD: secret
+    ports:
+        - "5430:5432"
+    volumes:
+        - postgres_data:/var/lib/postgresql/data
+        - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+volumes:
+    postgres_data:
