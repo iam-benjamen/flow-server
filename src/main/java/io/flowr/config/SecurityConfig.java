@@ -20,9 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Spring Security Configuration
- */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity()
@@ -40,17 +38,19 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(
                             "/api/v1/auth/**",
-                            "/api/v1/health",
+                            "/api/v1/health/",
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
                             "/favicon.ico"
                     ).permitAll()
 
+                    .requestMatchers("/api/v1/**").authenticated()
+
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                     .requestMatchers("/api/v1/workflows/templates/**").hasAnyRole("ADMIN", "DESIGNER")
 
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()
             )
 
             .sessionManagement(session ->
@@ -60,6 +60,7 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
             .exceptionHandling(exceptions -> exceptions
+
                     .authenticationEntryPoint((request, response, authException) -> {
                         response.setStatus(401);
                         response.setContentType("application/json");

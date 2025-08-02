@@ -18,15 +18,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * This filter runs on EVERY request to check for JWT tokens
- * Flow:
- * 1. Extract JWT from Authorization header
- * 2. Validate the token
- * 3. Extract user info from token
- * 4. Set Spring Security context
- * 5. Continue to next filter
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -39,7 +30,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
             ) throws ServletException, IOException {
-        if(isPublicEndpoint(request.getServletPath())) {
+
+        String path = request.getServletPath();
+
+        if(isPublicEndpoint(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if(!path.startsWith("/api/v1/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -57,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
 
         try{
-            userEmail = jwtService.extractUsername(jwt);
+            userEmail = jwtService.extractEmail(jwt);
 
             if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if(jwtService.isTokenValid(jwt, userEmail)){
@@ -66,22 +65,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String organizationId = jwtService.extractOrganizationId(jwt);
 
                     List<SimpleGrantedAuthority> authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + role)
+                        new SimpleGrantedAuthority("ROLE_" + role)
                     );
 
                     JwtAuthenticationToken authToken = new JwtAuthenticationToken(
-                            userEmail,
-                            authorities,
-                            UUID.fromString(userId),
-                            UUID.fromString(organizationId),
-                            role
+                        userEmail,
+                        authorities,
+                        UUID.fromString(userId),
+                        UUID.fromString(organizationId),
+                        role
                     );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                    log.debug("Successfully authenticated user: {} with role: {}", userEmail, role);
+                    log.debug("Successfully authenticated user: {} with role: {}{}", userEmail, role, authToken);
                 }
             }
         } catch (Exception e){
@@ -91,9 +90,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Check if the endpoint is public (doesn't require authentication)
-     */
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/api/v1/auth/") ||
                 path.equals("/api/v1/health") ||

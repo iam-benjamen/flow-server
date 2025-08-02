@@ -1,11 +1,11 @@
 package io.flowr.config;
 
+import lombok.Getter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 import java.util.UUID;
-
 
 /**
  * Custom JWT Authentication Token
@@ -13,7 +13,8 @@ import java.util.UUID;
  * additional user information from JWT token
  * This makes it easy to access user details anywhere in the application:
  */
-public class JwtAuthenticationToken extends UsernamePasswordAuthenticationToken {
+@Getter
+public class    JwtAuthenticationToken extends UsernamePasswordAuthenticationToken {
     private final UUID userId;
     private final UUID organizationId;
     private final String role;
@@ -29,18 +30,6 @@ public class JwtAuthenticationToken extends UsernamePasswordAuthenticationToken 
         this.userId = userId;
         this.organizationId = organizationId;
         this.role = role;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public UUID getOrganizationId() {
-        return organizationId;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     public String getEmail() {

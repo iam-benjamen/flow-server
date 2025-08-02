@@ -31,4 +31,13 @@ public class RegisterDto {
         
         private UUID organizationId;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Response {
+        private String message;
+        private String email;
+    }
 }

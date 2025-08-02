@@ -1,145 +1,187 @@
 package io.flowr.service;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
 
 
-/**
- * JWT Service handles JWT token creation, validation, and extraction
- */
 @Service
 @Slf4j
 public class JwtService {
-    @Value("${jwt.secret}")
-    private String secretKey;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    private final SecretKey secretKey;
+    private final long jwtExpirationHours;
+    private final long emailVerificationExpirationHours;
+    private final long passwordResetExpirationHours;
 
-    /**
-     * Generate JWT token for a user
-     * @param email User's email (becomes the 'subject')
-     * @param userId User's UUID
-     * @param role User's role
-     * @param organizationId User's organization UUID
-     * @return JWT token string
-     */
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration.hours}") long jwtExpirationHours,
+            @Value("${jwt.email-verification.expiration.hours}") long emailVerificationExpirationHours,
+            @Value("${jwt.password-reset.expiration.hours}") long passwordResetExpirationHours
+    ) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        this.jwtExpirationHours = jwtExpirationHours;
+        this.emailVerificationExpirationHours = emailVerificationExpirationHours;
+        this.passwordResetExpirationHours = passwordResetExpirationHours;
+    }
+
+
     public String generateToken(String email, String userId, String role, String organizationId) {
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("userId", userId);
-        extraClaims.put("role", role);
-        extraClaims.put("organizationId", organizationId);
+        Instant now = Instant.now();
+        Instant expiration = now.plus(jwtExpirationHours, ChronoUnit.HOURS);
 
-        return generateToken(extraClaims, email);
-    }
-
-    /**
-     * Generate token with custom claims
-     */
-    public String generateToken(Map<String, Object> extraClaims, String subject) {
-        return buildToken(extraClaims, subject, jwtExpiration);
-    }
-
-
-    /**
-     * Build the actual JWT token
-     */
-    private String buildToken(Map<String, Object> extraClaims, String subject, long expiration) {
         return Jwts.builder()
-                .claims(extraClaims)
-                .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignInKey())
+                .subject(email)
+                .claim("userId", userId)
+                .claim("role", role)
+                .claim("organizationId", organizationId)
+                .claim("type", "auth")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .signWith(secretKey)
                 .compact();
     }
 
-    /**
-    * Generic method to extract any claim from token
-    */
-    public <T> T extractClaim(String token,
-                              Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    public String generateEmailVerificationToken(String email, String userId) {
+        Instant now = Instant.now();
+        Instant expiration = now.plus(emailVerificationExpirationHours, ChronoUnit.HOURS);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("email", email)
+                .claim("type", "email_verification")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .signWith(secretKey)
+                .compact();
     }
 
-    /**
-     * Extract all claims from token
-     */
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSignInKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
 
+    public String generatePasswordResetToken(String email, String userId) {
+        Instant now = Instant.now();
+        Instant expiration = now.plus(passwordResetExpirationHours, ChronoUnit.HOURS);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("email", email)
+                .claim("type", "password_reset")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .signWith(secretKey)
+                .compact();
     }
 
-    /**
-     * Extract username (email) from token
-     */
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+
+    public Claims validateAuthToken(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+
+        String tokenType = claims.get("type", String.class);
+        if (!"auth".equals(tokenType)) {
+            throw new JwtException("Invalid token type for authentication");
+        }
+
+        return claims;
     }
 
-    /**
-     * Extract user ID from token
-     */
+
+    public Claims validateEmailVerificationToken(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+
+        String tokenType = claims.get("type", String.class);
+        if (!"email_verification".equals(tokenType)) {
+            throw new JwtException("Invalid token type for email verification");
+        }
+
+        return claims;
+    }
+
+    public Claims validatePasswordResetToken(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+
+        String tokenType = claims.get("type", String.class);
+        if (!"password_reset".equals(tokenType)) {
+            throw new JwtException("Invalid token type for password reset");
+        }
+
+        return claims;
+    }
+
+    private Claims validateTokenAndGetClaims(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token is expired: {}", e.getMessage());
+            throw new JwtException("Token has expired");
+        } catch (UnsupportedJwtException e) {
+            log.warn("JWT token is unsupported: {}", e.getMessage());
+            throw new JwtException("Unsupported token");
+        } catch (MalformedJwtException e) {
+            log.warn("JWT token is invalid: {}", e.getMessage());
+            throw new JwtException("Invalid token format");
+        } catch (SecurityException e) {
+            log.warn("JWT signature validation failed: {}", e.getMessage());
+            throw new JwtException("Invalid token signature");
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT token compact of handler are invalid: {}", e.getMessage());
+            throw new JwtException("Invalid token");
+        }
+    }
+
+
+    public String extractEmail(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+        return claims.getSubject();
+    }
+
+
     public String extractUserId(String token) {
-        return extractClaim(token, claims -> claims.get("userId", String.class));
+        Claims claims = validateTokenAndGetClaims(token);
+        return claims.get("userId", String.class);
     }
 
-    /**
-     * Extract a user role from token
-     */
+
     public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("role", String.class));
+        Claims claims = validateAuthToken(token);
+        return claims.get("role", String.class);
     }
 
-    /**
-     * Extract organization ID from token
-     */
+
     public String extractOrganizationId(String token) {
-        return extractClaim(token, claims -> claims.get("organizationId", String.class));
+        Claims claims = validateAuthToken(token);
+        return claims.get("organizationId", String.class);
     }
 
-    /**
-     * Extract expiration date from token
-     */
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    public boolean isTokenValid(String token, String email) {
+        Claims claims = validateTokenAndGetClaims(token);
+        String tokenEmail = claims.getSubject();
+        return tokenEmail.equals(email) && !isTokenExpired(token);
     }
 
-    /**
-     * Check if the token is expired
-     */
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    public boolean isTokenExpired(String token) {
+        try {
+            Claims claims = validateTokenAndGetClaims(token);
+            return claims.getExpiration().before(new Date());
+        } catch (JwtException e) {
+            return true;
+        }
     }
 
-    /**
-     * Validate token against user details
-     */
-    public boolean isTokenValid(String token, String username) {
-        final String tokenUsername = extractUsername(token);
-        return (tokenUsername.equals(username)) && !isTokenExpired(token);
-    }
-
-    /**
-     * Get the signing key from secret
-     */
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public Date getExpirationDate(String token) {
+        Claims claims = validateTokenAndGetClaims(token);
+        return claims.getExpiration();
     }
 }

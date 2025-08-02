@@ -45,4 +45,31 @@ public class PasswordDto {
         @Size(min = 8, message = "Password must be at least 8 characters")
         private String newPassword;
     }
+
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class EmailVerificationRequest {
+        private String token;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ResendVerificationRequest {
+        private String email;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TokenValidationResponse {
+        private boolean valid;
+        private String message;
+        private String email;
+    }
 }

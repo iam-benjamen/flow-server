@@ -3,10 +3,7 @@ package io.flowr.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -21,6 +18,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@EqualsAndHashCode(exclude = {"users"})
+@ToString(exclude = {"users"})
 public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

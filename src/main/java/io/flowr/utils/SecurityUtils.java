@@ -7,7 +7,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.UUID;
 
 public class SecurityUtils {
-
     public static JwtAuthenticationToken getCurrentJwtAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
