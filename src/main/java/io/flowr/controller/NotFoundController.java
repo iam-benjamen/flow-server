@@ -12,6 +12,6 @@ class NotFoundController {
     @RequestMapping("/**")
     public ResponseEntity<ApiResponse<Void>> handleNotFound() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error("Endpoint not found"));
+                .body(ApiResponse.error("Resource not found"));
     }
 }

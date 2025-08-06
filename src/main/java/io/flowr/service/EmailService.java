@@ -7,7 +7,6 @@ package io.flowr.service;
  */
 public interface EmailService {
 
-
     void sendEmailVerification(String email, String verificationToken);
 
 

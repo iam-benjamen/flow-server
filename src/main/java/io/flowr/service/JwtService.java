@@ -15,7 +15,6 @@ import java.util.Date;
 @Service
 @Slf4j
 public class JwtService {
-
     private final SecretKey secretKey;
     private final long jwtExpirationHours;
     private final long emailVerificationExpirationHours;
@@ -32,7 +31,6 @@ public class JwtService {
         this.emailVerificationExpirationHours = emailVerificationExpirationHours;
         this.passwordResetExpirationHours = passwordResetExpirationHours;
     }
-
 
     public String generateToken(String email, String userId, String role, String organizationId) {
         Instant now = Instant.now();
@@ -81,7 +79,6 @@ public class JwtService {
                 .compact();
     }
 
-
     public Claims validateAuthToken(String token) {
         Claims claims = validateTokenAndGetClaims(token);
 
@@ -92,7 +89,6 @@ public class JwtService {
 
         return claims;
     }
-
 
     public Claims validateEmailVerificationToken(String token) {
         Claims claims = validateTokenAndGetClaims(token);
@@ -147,18 +143,15 @@ public class JwtService {
         return claims.getSubject();
     }
 
-
     public String extractUserId(String token) {
         Claims claims = validateTokenAndGetClaims(token);
         return claims.get("userId", String.class);
     }
 
-
     public String extractRole(String token) {
         Claims claims = validateAuthToken(token);
         return claims.get("role", String.class);
     }
-
 
     public String extractOrganizationId(String token) {
         Claims claims = validateAuthToken(token);

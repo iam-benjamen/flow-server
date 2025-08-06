@@ -44,7 +44,7 @@ public class User {
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
-    private Boolean isActive = true;
+    private Boolean isActive = false;
 
     @Column(name = "email_verified", nullable = false)
     @Builder.Default

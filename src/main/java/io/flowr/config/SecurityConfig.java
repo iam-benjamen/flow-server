@@ -38,13 +38,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(
                             "/api/v1/auth/**",
-                            "/api/v1/health/",
+                            "/api/test/**",
+                            "/api/v1/health",
                             "/swagger-ui/**",
                             "/v3/api-docs/**",
                             "/favicon.ico"
                     ).permitAll()
-
-                    .requestMatchers("/api/v1/**").authenticated()
 
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
@@ -76,9 +75,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * Password encoder for hashing passwords
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);

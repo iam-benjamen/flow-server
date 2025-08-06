@@ -5,7 +5,6 @@ import io.flowr.dto.auth.PasswordDto;
 import io.flowr.dto.auth.RegisterDto;
 import io.flowr.dto.common.ApiResponse;
 import io.flowr.service.AuthService;
-import io.flowr.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +35,7 @@ class AuthController {
 
     /**
      * User registration endpoint
-     * POST /api/auth/register
+     * POST /api/v1/auth/register
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterDto.Response>> register(@Valid @RequestBody RegisterDto.Request request) {
@@ -50,23 +49,6 @@ class AuthController {
         }
     }
 
-
-    /**
-     * Change password endpoint
-     * PUT /api/auth/change-password
-     * Requires authentication
-     */
-    @PutMapping("/change-password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody PasswordDto.ChangeRequest request) {
-        try {
-            authService.changePassword(request, SecurityUtils.getCurrentUserId());
-            return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
-        } catch (RuntimeException e) {
-            log.error("Password change failed: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
 
     /**
      * Forgot password endpoint
@@ -112,6 +94,22 @@ class AuthController {
             return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
         } catch (RuntimeException e) {
             log.error("Email verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * Accept Invitation Endpoint
+     * GET /api/v1/auth/accept-invite?token=xyz
+     */
+    @GetMapping("/accept-invite")
+    public ResponseEntity<ApiResponse<Void>> acceptInvitation(@RequestParam String token) {
+        try {
+            authService.acceptInvitation(token);
+            return ResponseEntity.ok(ApiResponse.success("Invitation accepted successfully", null));
+        } catch (RuntimeException e) {
+            log.error("Invitation acceptance failed: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(e.getMessage()));
         }

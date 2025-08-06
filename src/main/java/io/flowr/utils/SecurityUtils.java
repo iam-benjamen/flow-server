@@ -14,7 +14,7 @@ public class SecurityUtils {
             return jwtAuth;
         }
 
-        throw new IllegalStateException("No JWT authentication found in security context");
+        throw new IllegalStateException("No authenticated user found");
     }
 
     public static UUID getCurrentUserId() {

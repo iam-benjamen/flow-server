@@ -1,5 +1,6 @@
 package io.flowr.service;
 
+import io.flowr.dto.auth.InviteDto;
 import io.flowr.dto.auth.LoginDto;
 import io.flowr.dto.auth.PasswordDto;
 import io.flowr.dto.auth.RegisterDto;
@@ -8,9 +9,9 @@ import io.flowr.entity.User;
 import io.flowr.repository.OrganizationRepository;
 import io.flowr.repository.UserRepository;
 import io.flowr.utils.Role;
+import io.flowr.utils.SecurityUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,7 +19,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -127,7 +127,6 @@ public class AuthService {
             User user = userRepository.findById(UUID.fromString(userId))
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-
             if (!user.getEmail().equals(email)) {
                 throw new RuntimeException("Invalid verification token");
             }
@@ -147,6 +146,39 @@ public class AuthService {
         }
     }
 
+    public void  acceptInvitation(String token) {
+        try {
+            var claims = jwtService.validateAuthToken(token);
+
+            String email = claims.getSubject() == null ? "" : claims.getSubject();
+            String userId = claims.get("userId", String.class);
+            String organizationId = claims.get("organizationId", String.class);
+
+            User user = userRepository.findById(UUID.fromString(userId))
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Organization organization = organizationRepository.findById(UUID.fromString(organizationId))
+                    .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+            if (!user.getEmail().equals(email) || !organization.getId().equals(user.getOrganization().getId())) {
+                throw new RuntimeException("Invalid invitation token");
+            }
+
+            if (user.getIsActive()) {
+                throw new RuntimeException("Invitation already accepted");
+            }
+
+            user.setEmailVerified(true);
+            user.setIsActive(true);
+            userRepository.save(user);
+
+            log.info("Invitation accepted successfully: {}", user.getEmail());
+
+        } catch (Exception e) {
+            log.error("failed to accept invitation: {}", e.getMessage());
+            throw new RuntimeException("Invalid or expired invitation token");
+        }
+    }
 
     public void changePassword(PasswordDto.ChangeRequest request, UUID userId) {
         User user = userRepository.findById(userId)
@@ -226,6 +258,42 @@ public class AuthService {
         log.info("Email verification resent for user: {}{}", user.getEmail(), verificationToken);
     }
 
+    public InviteDto.Response inviteUser(InviteDto.Request request){
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new IllegalStateException("User with this email already exists");
+        }
+
+        Organization organization = organizationRepository.findById(request.getOrganizationId())
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        String temporaryPassword = UUID.randomUUID().toString();
+
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(temporaryPassword))
+                .role(request.getRole())
+                .organization(organization)
+                .isActive(false)
+                .emailVerified(false)
+                .build();
+
+        user = userRepository.save(user);
+
+        String invitationToken = jwtService.generateToken(
+                user.getEmail(),
+                user.getId().toString(),
+                user.getRole().name(),
+                user.getOrganization().getId().toString()
+        );
+
+        log.info("User invited: {} by {}. Invitation Token: {}", user.getEmail(), SecurityUtils.getCurrentUserEmail(), invitationToken);
+
+        return InviteDto.Response.builder()
+                .message("Invitation sent successfully")
+                .email(user.getEmail())
+                .build();
+    }
 
     public LoginDto.Response.UserInfo getCurrentUser(UUID userId) {
         User user = userRepository.findById(userId)
