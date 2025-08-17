@@ -1,6 +1,6 @@
 package io.flowr.dto.auth;
 
-import io.flowr.utils.Role;
+import io.flowr.utils.Enums;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -27,7 +27,7 @@ public class InviteDto {
         private String email;
 
         @NotNull
-        private Role role;
+        private Enums.Role role;
 
         @NotNull
         private UUID organizationId;
