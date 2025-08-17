@@ -1,7 +1,6 @@
 package io.flowr.utils;
 
 import io.flowr.entity.Organization;
-import io.flowr.utils.Role;
 import io.flowr.entity.User;
 import io.flowr.repository.OrganizationRepository;
 import io.flowr.repository.UserRepository;
@@ -54,7 +53,7 @@ public class DataInitializer implements CommandLineRunner {
                 .name("Admin User")
                 .email("admin@acme.com")
                 .passwordHash(passwordEncoder.encode("password123"))
-                .role(Role.ADMIN)
+                .role(Enums.Role.ADMIN)
                 .organization(org)
                 .isActive(true)
                 .emailVerified(true)
@@ -68,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
                 .name("Designer User")
                 .email("designer@acme.com")
                 .passwordHash(passwordEncoder.encode("password123"))
-                .role(Role.DESIGNER)
+                .role(Enums.Role.DESIGNER)
                 .organization(org)
                 .isActive(true)
                 .emailVerified(true)
@@ -82,7 +81,7 @@ public class DataInitializer implements CommandLineRunner {
                 .name("Staff User")
                 .email("staff@acme.com")
                 .passwordHash(passwordEncoder.encode("password123"))
-                .role(Role.STAFF)
+                .role(Enums.Role.STAFF)
                 .organization(org)
                 .isActive(true)
                 .emailVerified(true)

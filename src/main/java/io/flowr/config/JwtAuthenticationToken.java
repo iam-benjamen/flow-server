@@ -36,7 +36,6 @@ public class    JwtAuthenticationToken extends UsernamePasswordAuthenticationTok
         return (String) getPrincipal();
     }
 
-
     public boolean isAdmin() {
         return "ADMIN".equals(role);
     }

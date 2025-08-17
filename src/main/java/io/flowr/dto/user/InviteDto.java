@@ -1,4 +1,4 @@
-package io.flowr.dto.auth;
+package io.flowr.dto.user;
 
 import io.flowr.utils.Enums;
 import jakarta.validation.constraints.Email;

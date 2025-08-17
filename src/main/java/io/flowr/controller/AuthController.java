@@ -5,6 +5,7 @@ import io.flowr.dto.auth.PasswordDto;
 import io.flowr.dto.auth.RegisterDto;
 import io.flowr.dto.common.ApiResponse;
 import io.flowr.service.AuthService;
+import io.flowr.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 class AuthController {
     private final AuthService authService;
+    private final UserService userService;
 
     /**
      * User Login endpoint
@@ -48,7 +50,6 @@ class AuthController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
-
 
     /**
      * Forgot password endpoint
@@ -106,7 +107,7 @@ class AuthController {
     @GetMapping("/accept-invite")
     public ResponseEntity<ApiResponse<Void>> acceptInvitation(@RequestParam String token) {
         try {
-            authService.acceptInvitation(token);
+            userService.acceptInvitation(token);
             return ResponseEntity.ok(ApiResponse.success("Invitation accepted successfully", null));
         } catch (RuntimeException e) {
             log.error("Invitation acceptance failed: {}", e.getMessage());

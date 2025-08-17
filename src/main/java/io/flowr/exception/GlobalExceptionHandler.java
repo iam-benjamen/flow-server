@@ -81,4 +81,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An unexpected error occurred"));
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        log.warn("Invalid request parameter: {}", ex.getName());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Invalid request parameter: " + ex.getName()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException ex) {
+        log.warn("Invalid credentials: {}", ex.getMessage());
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Invalid credentials"));
+    }
 }

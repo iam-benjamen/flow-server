@@ -1,6 +1,6 @@
 package io.flowr.entity;
 
-import io.flowr.utils.Role;
+import io.flowr.utils.Enums;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -50,10 +50,13 @@ public class User {
     @Builder.Default
     private Boolean emailVerified = false;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     @Builder.Default
-    private Role role = Role.STAFF;
+    private Enums.Role role = Enums.Role.STAFF;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -77,23 +80,4 @@ public class User {
         this.organization = null;
     }
 
-    public boolean isAdmin() {
-        return role == Role.ADMIN;
-    }
-
-    public boolean isDesigner() {
-        return role == Role.DESIGNER;
-    }
-
-    public boolean isStaff() {
-        return role == Role.STAFF;
-    }
-
-    public boolean canDesignWorkflows() {
-        return role == Role.ADMIN || role == Role.DESIGNER;
-    }
-
-    public boolean canManageUsers() {
-        return role == Role.ADMIN;
-    }
 }

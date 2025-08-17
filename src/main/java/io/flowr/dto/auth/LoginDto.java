@@ -30,9 +30,6 @@ public class LoginDto {
     @Builder
     public static class Response {
         private String token;
-        
-        @Builder.Default
-        private String tokenType = "Bearer";
 
         private UserInfo user;
         
@@ -44,6 +41,8 @@ public class LoginDto {
             private UUID id;
             private String name;
             private String email;
+            private Boolean isActive;
+            private String avatarUrl;
             private String role;
             private UUID organizationId;
             private String organizationName;

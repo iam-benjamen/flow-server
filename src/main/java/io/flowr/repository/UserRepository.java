@@ -1,7 +1,7 @@
 package io.flowr.repository;
 
 import io.flowr.entity.User;
-import io.flowr.utils.Role;
+import io.flowr.utils.Enums;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     /**
      * Find users by role in an organization
      */
-    List<User> findByOrganizationIdAndRoleAndIsActiveTrue(UUID organizationId, Role role);
+    List<User> findByOrganizationIdAndRoleAndIsActiveTrue(UUID organizationId, Enums.Role role);
 
     /**
      * Count active users in an organization
