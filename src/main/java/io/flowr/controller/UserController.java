@@ -27,8 +27,7 @@ class UserController {
      * Get all users
      * GET /api/v1/users
      */
-    @GetMapping("/")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DESIGNER')")
+    @GetMapping
     public ResponseEntity<ApiResponse<List<ProfileDto.Response>>> getAllUsers() {
         try {
             List<ProfileDto.Response> users = userService.getAllUsers();
@@ -45,7 +44,6 @@ class UserController {
      * GET /api/v1/users/:id
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProfileDto.Response>> getUserById(@PathVariable UUID id) {
         try {
             ProfileDto.Response userInfo = userService.getCurrentUser(id);
@@ -56,25 +54,6 @@ class UserController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
-
-
-    /**
-     * Assign/Change User Role ---> Admin only
-     * PUT /api/v1/users/:id/assign
-     */
-    @PutMapping("/{id}/assign")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> assignRole(@PathVariable UUID id, @Valid @RequestBody ProfileDto.RoleRequest request) {
-        try {
-            userService.assignRole(id, request);
-            return ResponseEntity.ok(ApiResponse.success("User role updated successfully", null));
-        } catch (RuntimeException e) {
-            log.error("Failed to assign role: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
 
     /**
      * Get current user information

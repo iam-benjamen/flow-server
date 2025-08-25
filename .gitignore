@@ -37,3 +37,7 @@ logs/
 .env
 .env.local
 .env.*.local
+
+.
+/V1__CREATE_WORKFLOW_TEMPLATES.sql
+/V1__init_schema.sql

@@ -41,13 +41,10 @@ public class SecurityConfig {
                             "/api/test/**",
                             "/api/v1/health",
                             "/swagger-ui/**",
-                            "/v3/api-docs/**",
                             "/favicon.ico"
                     ).permitAll()
 
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-
-                    .requestMatchers("/api/v1/workflows/templates/**").hasAnyRole("ADMIN", "DESIGNER")
 
                     .anyRequest().permitAll()
             )

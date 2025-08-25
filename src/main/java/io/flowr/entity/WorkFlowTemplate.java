@@ -1,4 +1,5 @@
 package io.flowr.entity;
+
 import io.flowr.utils.Enums;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,45 +12,28 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "workflow_step_actions")
+@Table(name = "workflow_templates")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"step"})
-@ToString(exclude = {"step"})
-public class WorkflowStepAction {
+public class WorkFlowTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false)
-    private String name;
+    private String title;
 
     @Column(length = 1000)
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Enums.ActionType actionType;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private Enums.ActionStatus status = Enums.ActionStatus.PENDING;
-
-    @Column(nullable = false)
-    private Integer actionOrder;
-
-    @Column(columnDefinition = "JSONB")
-    @JdbcTypeCode(SqlTypes.JSON)
-    private String actionData;
+    private Enums.Priority defaultPriority;
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean isOptional = false;
-
-    private LocalDateTime completedAt;
+    private Boolean isActive = false;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -59,7 +43,15 @@ public class WorkflowStepAction {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "JSONB", nullable = false)
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String templateStructure;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "step_id", nullable = false)
-    private WorkflowStep step;
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
 }

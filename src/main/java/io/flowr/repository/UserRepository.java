@@ -13,24 +13,14 @@ import java.util.UUID;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
-    /**
-     * Find user by email and active status
-     */
+
     Optional<User> findByEmailAndIsActiveTrue(String email);
 
-    /**
-     * Find user by email (regardless of active status)
-     */
     Optional<User> findByEmail(String email);
 
-    /**
-     * Check if user exists by email
-     */
+
     boolean existsByEmail(String email);
 
-    /**
-     * Find user by password hash
-     */
     Optional<User> findByPasswordHash(String token);
 
     /**
@@ -47,13 +37,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * Count active users in an organization
      */
     long countByOrganizationIdAndIsActiveTrue(UUID organizationId);
-
-    /**
-     * Custom query to find users with specific email domain
-     * @Query annotation allows custom JPQL queries
-     */
-    @Query("SELECT u FROM User u WHERE u.email LIKE %:domain% AND u.isActive = true")
-    List<User> findByEmailDomain(@Param("domain") String domain);
 
     /**
      * Find users created in the last N days

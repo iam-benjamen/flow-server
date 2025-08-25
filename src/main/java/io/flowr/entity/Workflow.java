@@ -32,7 +32,13 @@ public class Workflow {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Enums.WorkflowStatus status;
+    @Builder.Default
+    private Enums.WorkflowStatus status = Enums.WorkflowStatus.DRAFT;
+
+    @Transient
+    public Boolean getIsActive() {
+        return this.status == Enums.WorkflowStatus.ACTIVE;
+    }
 
     @Enumerated(EnumType.STRING)
     @Column()
@@ -67,8 +73,4 @@ public class Workflow {
     @Builder.Default
     private List<WorkflowStep> steps = new ArrayList<>();
 
-    public void addStep(WorkflowStep step) {
-        steps.add(step);
-        step.setWorkflow(this);
-    }
 }

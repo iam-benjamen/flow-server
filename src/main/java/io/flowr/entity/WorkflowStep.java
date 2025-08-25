@@ -64,6 +64,9 @@ public class WorkflowStep {
     @JoinColumn(name = "workflow_id", nullable = false)
     private Workflow workflow;
 
+    @Transient
+//    isCurrentStep
+
     public void addStepAction(WorkflowStepAction stepAction) {
         stepActions.add(stepAction);
         stepAction.setStep(this);

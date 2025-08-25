@@ -24,7 +24,7 @@ public enum Enums {
     }
 
     public enum ActionType {
-        FILE_UPLOAD, REVIEW, FORM_FILL, SIGNATURE
+        FILE_UPLOAD, REVIEW, SIGNATURE
     }
 
     public enum ActionStatus {
